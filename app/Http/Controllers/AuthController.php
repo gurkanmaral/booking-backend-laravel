@@ -2,41 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CreateUserRequest;
+use App\Http\Requests\LoginRequest;
 use App\Models\User;
-
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-
+use Illuminate\Support\Facades\Cookie;
 class AuthController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-
-     public function login(Request $request)
+    
+     public function login(LoginRequest $request)
      {
-        $request->validate([
-            'email'=>'required|email',
-            'password' => 'required',
-        ]);
+       
+
+        // $user = User::where('email',$request->email)->first();
+
+        // if(!$user)
+        // {
+        //     throw ValidationException::withMessages([
+        //         'email' => ['The provided credentials are incorrect']
+        //     ]);
+        // }
+        // if(!Hash::check($request->password,$user->password)){
+            
+        //     throw ValidationException::withMessages([
+        //         'email' => ['The provided credentials are incorrect']
+        //     ]);
+        // }
+        $request->authenticate();
 
         $user = User::where('email',$request->email)->first();
-
-        if(!$user)
-        {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect']
-            ]);
-        }
-        if(!Hash::check($request->password,$user->password)){
-            
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect']
-            ]);
-        }
-
         $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
@@ -44,17 +46,10 @@ class AuthController extends Controller
         ]);
     }
 
-    public function register(Request $request)
-    {
-        $validator = Validator::make($request->all(),[
-            'name' => 'required|string|min:1|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-        ]);
 
-        if($validator->fails()){
-            return response()->json($validator->errors(),400);
-        }
+    public function register(CreateUserRequest $request)
+    {
+    
         
         $user = User::create([
             'name'=>$request->name,
@@ -68,6 +63,15 @@ class AuthController extends Controller
             'message'=>'User successfully registered',
             'token'=> $token,
         ],201);
+    }
+
+    public function logout(Request $request)
+    { 
+      
+    
+     $request->user()->tokens()->delete();
+    
+        return response()->json(['message' => 'Successfully logged out']);
     }
 
   

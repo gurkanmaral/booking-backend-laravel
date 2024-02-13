@@ -64,10 +64,10 @@ class HouseController extends Controller
            
             $house->save();
             
-            // House saved successfully
+           
             return response()->json(['message' => 'House created successfully'], 201);
         } catch (\Exception $e) {
-            // Error occurred while saving the house
+        
             return response()->json(['error' => 'Failed to create house'], 500);
         }
 
